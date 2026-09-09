@@ -26,18 +26,23 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /// @param authenticationManager
+    /// @param jwtService
+    /// @param userRepository
+    /// @param roleRepository
+    /// @param passwordEncoder
     public AuthService(
+            AuthenticationManager authenticationManager,
+            JwtService jwtService,
             UserRepository userRepository,
             RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            JwtService jwtService
+            PasswordEncoder passwordEncoder
     ) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
     }
 
     public LoginResponse login(LoginRequest request) {
