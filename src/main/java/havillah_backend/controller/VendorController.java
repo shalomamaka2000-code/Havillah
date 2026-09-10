@@ -34,4 +34,32 @@ public class VendorController {
                 vendorService.getAllVendors()
         );
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VendorResponse> getVendorById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                vendorService.getVendorById(id)
+        );
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<VendorResponse> updateVendor(
+            @PathVariable Long id,
+            @Valid @RequestBody VendorRequest request
+    ) {
+        return ResponseEntity.ok(
+                vendorService.updateVendor(id, request)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteVendor(
+            @PathVariable Long id
+    ) {
+        vendorService.deleteVendor(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -6,6 +6,8 @@ import havillah_backend.entity.Role;
 import havillah_backend.entity.User;
 import havillah_backend.repository.RoleRepository;
 import havillah_backend.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import havillah_backend.dto.LoginRequest;
@@ -16,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
@@ -66,7 +69,12 @@ public class AuthService {
                 user.getEmail(),
                 user.getRole().getName()
         );
-    }
+    }/*catch (
+    BadCredentialsException e) {
+        throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "Invalid email or password"
+        );
+    }*/
 
     public UserResponse register(RegisterRequest request) {
 

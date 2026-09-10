@@ -56,4 +56,50 @@ public class VendorService {
                 ))
                 .toList();
     }
+
+    public VendorResponse getVendorById(Long id) {
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        return new VendorResponse(
+                vendor.getId(),
+                vendor.getBusinessName(),
+                vendor.getEmail(),
+                vendor.getPhone(),
+                vendor.getAddress(),
+                vendor.getActive()
+        );
+    }
+
+    public VendorResponse updateVendor(Long id, VendorRequest request) {
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        vendor.setBusinessName(request.getBusinessName());
+        vendor.setEmail(request.getEmail());
+        vendor.setPhone(request.getPhone());
+        vendor.setAddress(request.getAddress());
+
+        Vendor updatedVendor = vendorRepository.save(vendor);
+
+        return new VendorResponse(
+                updatedVendor.getId(),
+                updatedVendor.getBusinessName(),
+                updatedVendor.getEmail(),
+                updatedVendor.getPhone(),
+                updatedVendor.getAddress(),
+                updatedVendor.getActive()
+        );
+    }
+
+    public void deleteVendor(Long id) {
+
+        if (!vendorRepository.existsById(id)) {
+            throw new RuntimeException("Vendor not found");
+        }
+
+        vendorRepository.deleteById(id);
+    }
 }
