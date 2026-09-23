@@ -1,0 +1,11 @@
+$kind: collection
+name: Havillah API
+variables:
+  - key: baseUrl
+    value: 'http://localhost:8080'
+  - key: token
+    value: ''
+  - key: categoryId
+    value: '1'
+  - key: vendorId
+    value: '1'

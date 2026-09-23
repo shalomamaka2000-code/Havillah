@@ -1,0 +1,22 @@
+$kind: http-request
+name: Update Vendor
+method: PUT
+url: '{{baseUrl}}/api/vendors/{{vendorId}}'
+order: 4000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{token}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "businessName": "Updated Tech Store",
+      "email": "updated@example.com",
+      "phone": "08011111111",
+      "address": "456 New Street, Lagos"
+    }

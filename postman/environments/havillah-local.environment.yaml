@@ -1,0 +1,10 @@
+name: Havillah Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:8080'
+    enabled: true
+    type: default
+  - key: token
+    value: ''
+    enabled: true
+    type: default

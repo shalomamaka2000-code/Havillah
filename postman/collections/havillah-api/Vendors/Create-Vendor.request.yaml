@@ -1,0 +1,22 @@
+$kind: http-request
+name: Create Vendor
+method: POST
+url: '{{baseUrl}}/api/vendors'
+order: 1000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{token}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "businessName": "Tech Store",
+      "email": "techstore@example.com",
+      "phone": "08098765432",
+      "address": "123 Tech Street, Lagos"
+    }
