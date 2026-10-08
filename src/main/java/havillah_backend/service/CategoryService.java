@@ -4,6 +4,7 @@ import havillah_backend.dto.CategoryRequest;
 import havillah_backend.dto.CategoryResponse;
 import havillah_backend.entity.Category;
 import havillah_backend.repository.CategoryRepository;
+import havillah_backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,9 +20,9 @@ public class CategoryService {
 
     public CategoryResponse createCategory(CategoryRequest request) {
 
-        if (categoryRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Category already exists");
-        }
+        if (categoryRepository.existsByName(request.getName()))
+            throw new IllegalArgumentException("Category already exists");
+
 
         Category category = new Category();
         category.setName(request.getName());
@@ -55,7 +56,7 @@ public class CategoryService {
 
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Category not found")
+                        new ResourceNotFoundException("Category not found")
                 );
 
         category.setName(request.getName());
@@ -72,7 +73,7 @@ public class CategoryService {
     public void deleteCategory(Long id) {
 
         if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Category not found");
+            throw new ResourceNotFoundException("Category not found");
         }
 
         categoryRepository.deleteById(id);

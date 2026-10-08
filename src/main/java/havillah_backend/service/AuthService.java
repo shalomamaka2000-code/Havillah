@@ -4,6 +4,7 @@ import havillah_backend.dto.RegisterRequest;
 import havillah_backend.dto.UserResponse;
 import havillah_backend.entity.Role;
 import havillah_backend.entity.User;
+import havillah_backend.exception.ResourceNotFoundException;
 import havillah_backend.repository.RoleRepository;
 import havillah_backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ *
+ */
 @Service
 public class AuthService {
 
@@ -50,12 +54,14 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -69,21 +75,24 @@ public class AuthService {
                 user.getEmail(),
                 user.getRole().getName()
         );
-    }/*catch (
-    BadCredentialsException e) {
+    } catch(
+    BadCredentialsException e)
+
+    {
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED, "Invalid email or password"
         );
-    }*/
+    }
+}
 
     public UserResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
         Role customerRole = roleRepository.findByName("CUSTOMER")
-                .orElseThrow(() -> new RuntimeException("Customer role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer role not found"));
 
         User user = new User();
         user.setFirstName(request.getFirstName());

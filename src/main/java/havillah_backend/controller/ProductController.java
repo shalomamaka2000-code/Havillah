@@ -2,10 +2,12 @@ package havillah_backend.controller;
 
 import havillah_backend.dto.ProductRequest;
 import havillah_backend.dto.ProductResponse;
+import havillah_backend.entity.Product;
 import havillah_backend.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -35,6 +37,17 @@ public class ProductController {
         );
     }
 
+    /*
+     * This is the get api for searching individual product
+     * */
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchProducts(
+            @RequestParam String name
+    ) {
+        return ResponseEntity.ok(productService.searchProducts(name));
+    }
+
+/*This is the GET api to retur */
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(
             @PathVariable Long id
@@ -42,6 +55,7 @@ public class ProductController {
         return ResponseEntity.ok(
                 productService.getProductById(id)
         );
+
     }
 
     @PutMapping("/{id}")

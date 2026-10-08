@@ -4,6 +4,7 @@ import havillah_backend.dto.VendorRequest;
 import havillah_backend.dto.VendorResponse;
 import havillah_backend.entity.Vendor;
 import havillah_backend.repository.VendorRepository;
+import havillah_backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class VendorService {
     public VendorResponse createVendor(VendorRequest request) {
 
         if (vendorRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Vendor email already exists");
+            throw new ResourceNotFoundException("Vendor email already exists");
         }
 
         Vendor vendor = new Vendor();
@@ -60,7 +61,7 @@ public class VendorService {
     public VendorResponse getVendorById(Long id) {
 
         Vendor vendor = vendorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
 
         return new VendorResponse(
                 vendor.getId(),
@@ -75,7 +76,7 @@ public class VendorService {
     public VendorResponse updateVendor(Long id, VendorRequest request) {
 
         Vendor vendor = vendorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
 
         vendor.setBusinessName(request.getBusinessName());
         vendor.setEmail(request.getEmail());
@@ -97,7 +98,7 @@ public class VendorService {
     public void deleteVendor(Long id) {
 
         if (!vendorRepository.existsById(id)) {
-            throw new RuntimeException("Vendor not found");
+            throw new ResourceNotFoundException("Vendor not found");
         }
 
         vendorRepository.deleteById(id);

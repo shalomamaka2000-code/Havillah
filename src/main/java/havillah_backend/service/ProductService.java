@@ -5,6 +5,7 @@ import havillah_backend.dto.ProductResponse;
 import havillah_backend.entity.Category;
 import havillah_backend.entity.Product;
 import havillah_backend.entity.Vendor;
+import havillah_backend.exception.ResourceNotFoundException;
 import havillah_backend.repository.CategoryRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.VendorRepository;
@@ -13,11 +14,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final VendorRepository vendorRepository;
+
 
     public ProductService(
             ProductRepository productRepository,
@@ -33,12 +36,12 @@ public class ProductService {
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() ->
-                        new RuntimeException("Category not found")
+                        new ResourceNotFoundException("Category not found")
                 );
 
         Vendor vendor = vendorRepository.findById(request.getVendorId())
                 .orElseThrow(() ->
-                        new RuntimeException("Vendor not found")
+                        new ResourceNotFoundException("Vendor not found")
                 );
 
         Product product = new Product();
@@ -55,6 +58,17 @@ public class ProductService {
 
         return mapToResponse(savedProduct);
     }
+/*
+This is the search parameter from ProductRepository now add the
+endpoint to ProductController
+*/
+    public List<ProductResponse> searchProducts(String name) {
+        return productRepository
+                .findByNameContainingIgnoreCase(name)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 
     public List<ProductResponse> getAllProducts() {
 
@@ -68,7 +82,7 @@ public class ProductService {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found")
+                        new ResourceNotFoundException("Product not found")
                 );
 
         return mapToResponse(product);
@@ -81,17 +95,17 @@ public class ProductService {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found")
+                        new ResourceNotFoundException("Product not found")
                 );
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() ->
-                        new RuntimeException("Category not found")
+                        new ResourceNotFoundException("Category not found")
                 );
 
         Vendor vendor = vendorRepository.findById(request.getVendorId())
                 .orElseThrow(() ->
-                        new RuntimeException("Vendor not found")
+                        new ResourceNotFoundException("Vendor not found")
                 );
 
         product.setName(request.getName());
@@ -110,7 +124,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
 
         if (!productRepository.existsById(id)) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         productRepository.deleteById(id);

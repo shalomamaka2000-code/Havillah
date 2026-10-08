@@ -22,7 +22,7 @@ public class JwtService {
     private long expirationTime;
 
     private static final long EXPIRATION_TIME =
-            1000 * 60 * 60; // 1 hour
+            2000 * 60 * 60; // 2 hour
 
     public String generateToken(UserDetails userDetails) {
 
