@@ -167,4 +167,24 @@ Triggered when the requested quantity is more than what is available.
                                                             HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null);
     }
+
+    /*
+400 Bad Request (empty cart).
+Triggered when checkout is attempted with no items in the cart.
+*/
+    @ExceptionHandler(EmptyCartException.class)
+    public ResponseEntity<ApiError> handleEmptyCart(EmptyCartException ex, HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null);
+    }
+
+    /*
+    409 Conflict (invalid order status change).
+    Triggered when an order can't move to the requested status,
+    e.g. cancelling an order that has already shipped.
+    */
+    @ExceptionHandler(InvalidOrderStateException.class)
+    public ResponseEntity<ApiError> handleInvalidOrderState(InvalidOrderStateException ex,
+                                                            HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), req, null);
+    }
 }

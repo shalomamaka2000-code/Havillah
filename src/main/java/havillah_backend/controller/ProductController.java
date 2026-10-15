@@ -5,9 +5,11 @@ import havillah_backend.dto.ProductResponse;
 import havillah_backend.entity.Product;
 import havillah_backend.service.ProductService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -21,13 +23,13 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestBody ProductRequest request
     ) {
-        return ResponseEntity.ok(
-                productService.createProduct(request)
-        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productService.createProduct(request));
     }
 
     @GetMapping
@@ -58,6 +60,7 @@ public class ProductController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
@@ -67,7 +70,7 @@ public class ProductController {
                 productService.updateProduct(id, request)
         );
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(
             @PathVariable Long id

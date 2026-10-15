@@ -16,21 +16,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        createRoleIfMissing("ADMIN");
+        createRoleIfMissing("CUSTOMER");
+        createRoleIfMissing("VENDOR");
+    }
 
-        if (roleRepository.count() == 0) {
-
-            Role admin = new Role();
-            admin.setName("ADMIN");
-
-            Role customer = new Role();
-            customer.setName("CUSTOMER");
-
-            Role vendor = new Role();
-            vendor.setName("VENDOR");
-
-            roleRepository.save(admin);
-            roleRepository.save(customer);
-            roleRepository.save(vendor);
+    private void createRoleIfMissing(String name) {
+        if (roleRepository.findByName(name).isEmpty()) {
+            Role role = new Role();
+            role.setName(name);
+            roleRepository.save(role);
         }
     }
 }
