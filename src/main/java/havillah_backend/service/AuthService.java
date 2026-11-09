@@ -1,30 +1,32 @@
 package havillah_backend.service;
 
-import havillah_backend.dto.RegisterRequest;
-import havillah_backend.dto.UserResponse;
-import havillah_backend.entity.Role;
-import havillah_backend.entity.User;
-import havillah_backend.exception.ResourceNotFoundException;
-import havillah_backend.exception.DuplicateResourceException;
-import havillah_backend.repository.RoleRepository;
-import havillah_backend.repository.UserRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import havillah_backend.dto.LoginRequest;
 import havillah_backend.dto.LoginResponse;
+import havillah_backend.dto.RegisterRequest;
+import havillah_backend.dto.UserResponse;
+import havillah_backend.dto.VendorRegisterRequest;
+import havillah_backend.dto.VendorRegistrationResponse;
+import havillah_backend.entity.Role;
+import havillah_backend.entity.User;
+import havillah_backend.entity.Vendor;
+import havillah_backend.exception.DuplicateResourceException;
+import havillah_backend.exception.ResourceNotFoundException;
+import havillah_backend.repository.RoleRepository;
+import havillah_backend.repository.UserRepository;
+import havillah_backend.repository.VendorRepository;
 import havillah_backend.security.JwtService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- *
- */
 @Service
 public class AuthService {
 
@@ -32,63 +34,58 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final VendorRepository vendorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /// @param authenticationManager
-    /// @param jwtService
-    /// @param userRepository
-    /// @param roleRepository
-    /// @param passwordEncoder
     public AuthService(
             AuthenticationManager authenticationManager,
             JwtService jwtService,
             UserRepository userRepository,
             RoleRepository roleRepository,
+            VendorRepository vendorRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.vendorRepository = vendorRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public LoginResponse login(LoginRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
 
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail().trim().toLowerCase(),
+                            normalizedEmail,
                             request.getPassword()
                     )
             );
 
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = jwtService.generateToken(userDetails);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(normalizedEmail)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String token = jwtService.generateToken(userDetails);
-
-        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return new LoginResponse(
-                token,
-                user.getEmail(),
-                user.getRole().getName()
-        );
-    } catch(
-    BadCredentialsException e)
-
-    {
-        throw new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED, "Invalid email or password"
-        );
+            return new LoginResponse(
+                    token,
+                    user.getEmail(),
+                    user.getRole().getName()
+            );
+        } catch (BadCredentialsException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password"
+            );
+        }
     }
-}
 
+    @Transactional
     public UserResponse register(RegisterRequest request) {
-
         String normalizedEmail = request.getEmail().trim().toLowerCase();
+
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new DuplicateResourceException("Email already exists");
         }
@@ -101,21 +98,61 @@ public class AuthService {
         user.setLastName(request.getLastName());
         user.setEmail(normalizedEmail);
         user.setPhone(request.getPhone());
-
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
         user.setRole(customerRole);
+
+        return mapUserResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public VendorRegistrationResponse registerVendor(VendorRegisterRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.existsByEmail(normalizedEmail)
+                || vendorRepository.existsByEmail(normalizedEmail)) {
+            throw new DuplicateResourceException("Email already exists");
+        }
+
+        Role vendorRole = roleRepository.findByName("VENDOR")
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor role not found"));
+
+        User user = new User();
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(normalizedEmail);
+        user.setPhone(request.getPhone());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(vendorRole);
 
         User savedUser = userRepository.save(user);
 
-        UserResponse response = new UserResponse();
-        response.setId(savedUser.getId());
-        response.setFirstName(savedUser.getFirstName());
-        response.setLastName(savedUser.getLastName());
-        response.setEmail(savedUser.getEmail());
-        response.setPhone(savedUser.getPhone());
-        response.setRole(savedUser.getRole().getName());
+        Vendor vendor = new Vendor();
+        vendor.setBusinessName(request.getBusinessName().trim());
+        vendor.setEmail(normalizedEmail);
+        vendor.setPhone(request.getPhone());
+        vendor.setAddress(request.getAddress());
+        vendor.setActive(true);
+        vendor.setUser(savedUser);
 
+        Vendor savedVendor = vendorRepository.save(vendor);
+
+        return new VendorRegistrationResponse(
+                savedUser.getId(),
+                savedVendor.getId(),
+                savedUser.getEmail(),
+                savedVendor.getBusinessName(),
+                savedUser.getRole().getName()
+        );
+    }
+
+    private UserResponse mapUserResponse(User user) {
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
+        response.setRole(user.getRole().getName());
         return response;
     }
 }
