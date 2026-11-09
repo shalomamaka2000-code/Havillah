@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.math.BigDecimal;
 
 @Getter
@@ -30,11 +31,9 @@ public class ProductRequest {
     @NotNull(message = "Category ID is required")
     private Long categoryId;
 
-    @NotNull(message = "Vendor ID is required")
+    // Admins may specify a vendor. Vendor accounts always use their linked profile.
     private Long vendorId;
 
     public ProductRequest() {
     }
-
-
 }
