@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HavillahBackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <envs>
+      <env name="ADMIN_EMAIL" value="admin@havillah.com" />
+      <env name="ADMIN_PASSWORD" value="NwwAdmin123" />
+    </envs>
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
+    <module name="havillah-backend" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="havillah_backend.HavillahBackendApplication" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="havillah_backend.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
