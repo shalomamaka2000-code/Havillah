@@ -5,6 +5,7 @@ import havillah_backend.dto.VendorResponse;
 import havillah_backend.entity.Vendor;
 import havillah_backend.repository.VendorRepository;
 import havillah_backend.exception.ResourceNotFoundException;
+import havillah_backend.exception.DuplicateResourceException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class VendorService {
     public VendorResponse createVendor(VendorRequest request) {
 
         if (vendorRepository.existsByEmail(request.getEmail())) {
-            throw new ResourceNotFoundException("Vendor email already exists");
+            throw new DuplicateResourceException("Vendor email already exists");
         }
 
         Vendor vendor = new Vendor();
