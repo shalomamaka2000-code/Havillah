@@ -6,7 +6,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-
 @Entity
 @Table(name = "vendors")
 public class Vendor {
@@ -29,6 +28,12 @@ public class Vendor {
     @Column(nullable = false)
     private Boolean active = true;
 
+    // Nullable temporarily so existing vendor rows can remain during migration.
+    // New vendor registrations always create this relationship.
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
+    private User user;
+
     public Vendor() {
     }
 
@@ -43,6 +48,4 @@ public class Vendor {
         this.phone = phone;
         this.address = address;
     }
-
-
 }
