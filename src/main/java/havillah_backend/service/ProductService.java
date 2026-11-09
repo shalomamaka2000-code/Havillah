@@ -10,6 +10,8 @@ import havillah_backend.repository.CategoryRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.VendorRepository;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +43,7 @@ public class ProductService {
         Vendor vendor;
         if (isAdmin(authentication)) {
             if (request.getVendorId() == null) {
-                throw new IllegalArgumentException("Vendor ID is required when an admin creates a product");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vendor ID is required when an admin creates a product");
             }
             vendor = vendorRepository.findById(request.getVendorId())
                     .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
