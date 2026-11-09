@@ -2,14 +2,13 @@ package havillah_backend.controller;
 
 import havillah_backend.dto.ProductRequest;
 import havillah_backend.dto.ProductResponse;
-import havillah_backend.entity.Product;
 import havillah_backend.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,25 +22,21 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR')")
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(
-            @Valid @RequestBody ProductRequest request
+            @Valid @RequestBody ProductRequest request,
+            Authentication authentication
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productService.createProduct(request));
+                .body(productService.createProduct(request, authentication));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        return ResponseEntity.ok(
-                productService.getAllProducts()
-        );
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    /*
-     * This is the get api for searching individual product
-     * */
     @GetMapping("/search")
     public ResponseEntity<List<ProductResponse>> searchProducts(
             @RequestParam String name
@@ -49,34 +44,28 @@ public class ProductController {
         return ResponseEntity.ok(productService.searchProducts(name));
     }
 
-/*This is the GET api to retur */
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(
-            @PathVariable Long id
-    ) {
-        return ResponseEntity.ok(
-                productService.getProductById(id)
-        );
-
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request
+            @Valid @RequestBody ProductRequest request,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(
-                productService.updateProduct(id, request)
-        );
+        return ResponseEntity.ok(productService.updateProduct(id, request, authentication));
     }
-    @PreAuthorize("hasRole('ADMIN')")
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        productService.deleteProduct(id);
-
+        productService.deleteProduct(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }
