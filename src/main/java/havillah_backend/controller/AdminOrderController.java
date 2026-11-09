@@ -4,12 +4,14 @@ import havillah_backend.dto.OrderRequest;
 import havillah_backend.dto.OrderResponse;
 import havillah_backend.service.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/orders")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminOrderController {
 
     private final OrderService orderService;
