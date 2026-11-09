@@ -5,6 +5,7 @@ import havillah_backend.dto.UserResponse;
 import havillah_backend.entity.Role;
 import havillah_backend.entity.User;
 import havillah_backend.exception.ResourceNotFoundException;
+import havillah_backend.exception.DuplicateResourceException;
 import havillah_backend.repository.RoleRepository;
 import havillah_backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -57,7 +58,7 @@ public class AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
+                            request.getEmail().trim().toLowerCase(),
                             request.getPassword()
                     )
             );
@@ -67,7 +68,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(userDetails);
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new LoginResponse(
@@ -87,8 +88,9 @@ public class AuthService {
 
     public UserResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new DuplicateResourceException("Email already exists");
         }
 
         Role customerRole = roleRepository.findByName("CUSTOMER")
@@ -97,7 +99,7 @@ public class AuthService {
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
+        user.setEmail(normalizedEmail);
         user.setPhone(request.getPhone());
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
