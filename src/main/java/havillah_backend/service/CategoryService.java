@@ -4,6 +4,7 @@ import havillah_backend.dto.CategoryRequest;
 import havillah_backend.dto.CategoryResponse;
 import havillah_backend.entity.Category;
 import havillah_backend.repository.CategoryRepository;
+import havillah_backend.exception.DuplicateResourceException;
 import havillah_backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -19,63 +20,57 @@ public class CategoryService {
     }
 
     public CategoryResponse createCategory(CategoryRequest request) {
-
-        if (categoryRepository.existsByName(request.getName()))
-            throw new IllegalArgumentException("Category already exists");
-
+        if (categoryRepository.existsByName(request.getName())) {
+            throw new DuplicateResourceException("Category already exists");
+        }
 
         Category category = new Category();
         category.setName(request.getName());
         category.setDescription(request.getDescription());
 
-        Category savedCategory = categoryRepository.save(category);
-
-        return new CategoryResponse(
-                savedCategory.getId(),
-                savedCategory.getName(),
-                savedCategory.getDescription()
-        );
+        return toResponse(categoryRepository.save(category));
     }
 
     public List<CategoryResponse> getAllCategories() {
-
         return categoryRepository.findAll()
                 .stream()
-                .map(category -> new CategoryResponse(
-                        category.getId(),
-                        category.getName(),
-                        category.getDescription()
-                ))
+                .map(this::toResponse)
                 .toList();
     }
 
-    public CategoryResponse updateCategory(
-            Long id,
-            CategoryRequest request
-    ) {
-
+    public CategoryResponse getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found")
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        return toResponse(category);
+    }
+
+    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        if (categoryRepository.existsByName(request.getName())
+                && !category.getName().equalsIgnoreCase(request.getName())) {
+            throw new DuplicateResourceException("Category name already exists");
+        }
 
         category.setName(request.getName());
         category.setDescription(request.getDescription());
 
-        Category updatedCategory = categoryRepository.save(category);
-
-        return new CategoryResponse(
-                updatedCategory.getId(),
-                updatedCategory.getName(),
-                updatedCategory.getDescription()
-        );
+        return toResponse(categoryRepository.save(category));
     }
-    public void deleteCategory(Long id) {
 
+    public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
             throw new ResourceNotFoundException("Category not found");
         }
-
         categoryRepository.deleteById(id);
+    }
+
+    private CategoryResponse toResponse(Category category) {
+        return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getDescription()
+        );
     }
 }
