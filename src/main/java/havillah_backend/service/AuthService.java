@@ -15,6 +15,7 @@ import havillah_backend.repository.RoleRepository;
 import havillah_backend.repository.UserRepository;
 import havillah_backend.repository.VendorRepository;
 import havillah_backend.security.JwtService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 public class AuthService {
 
@@ -70,12 +72,15 @@ public class AuthService {
             User user = userRepository.findByEmail(normalizedEmail)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+            log.info("User authenticated successfully. Role: {}", user.getRole().getName());
+
             return new LoginResponse(
                     token,
                     user.getEmail(),
                     user.getRole().getName()
             );
         } catch (BadCredentialsException e) {
+            log.warn("Authentication failed: invalid credentials");
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Invalid email or password"
             );
@@ -87,6 +92,7 @@ public class AuthService {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
 
         if (userRepository.existsByEmail(normalizedEmail)) {
+            log.warn("Customer registration rejected: email already exists");
             throw new DuplicateResourceException("Email already exists");
         }
 
@@ -101,7 +107,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(customerRole);
 
-        return mapUserResponse(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        log.info("Customer account registered successfully. User ID: {}", savedUser.getId());
+
+        return mapUserResponse(savedUser);
     }
 
     @Transactional
@@ -110,6 +119,7 @@ public class AuthService {
 
         if (userRepository.existsByEmail(normalizedEmail)
                 || vendorRepository.existsByEmail(normalizedEmail)) {
+            log.warn("Vendor registration rejected: email already exists");
             throw new DuplicateResourceException("Email already exists");
         }
 
@@ -135,6 +145,8 @@ public class AuthService {
         vendor.setUser(savedUser);
 
         Vendor savedVendor = vendorRepository.save(vendor);
+
+        log.info("Vendor account registered successfully. Vendor ID: {}", savedVendor.getId());
 
         return new VendorRegistrationResponse(
                 savedUser.getId(),
