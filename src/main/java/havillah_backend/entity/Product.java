@@ -1,9 +1,10 @@
-
 package havillah_backend.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,7 +30,18 @@ public class Product {
     @Column(nullable = false)
     private Integer stockQuantity;
 
+    // Retained as the primary/legacy image URL for backward compatibility.
     private String imageUrl;
+
+    // Additional product images are stored in a separate table.
+    @ElementCollection
+    @CollectionTable(
+            name = "product_images",
+            joinColumns = @JoinColumn(name = "product_id")
+    )
+    @Column(name = "image_url", nullable = false, length = 2048)
+    @OrderColumn(name = "image_order")
+    private List<String> imageUrls = new ArrayList<>();
 
     @Column(nullable = false)
     private Boolean active = true;
