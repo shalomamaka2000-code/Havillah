@@ -3,10 +3,14 @@ package havillah_backend.service;
 import havillah_backend.dto.CategoryRequest;
 import havillah_backend.dto.CategoryResponse;
 import havillah_backend.entity.Category;
-import havillah_backend.repository.CategoryRepository;
 import havillah_backend.exception.DuplicateResourceException;
 import havillah_backend.exception.ResourceNotFoundException;
+import havillah_backend.repository.CategoryRepository;
+import havillah_backend.repository.ProductRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -14,9 +18,14 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(
+            CategoryRepository categoryRepository,
+            ProductRepository productRepository
+    ) {
         this.categoryRepository = categoryRepository;
+        this.productRepository = productRepository;
     }
 
     public CategoryResponse createCategory(CategoryRequest request) {
@@ -59,10 +68,19 @@ public class CategoryService {
         return toResponse(categoryRepository.save(category));
     }
 
+    @Transactional
     public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
             throw new ResourceNotFoundException("Category not found");
         }
+
+        if (productRepository.existsByCategory_Id(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot delete this category because products are still assigned to it. Reassign those products first."
+            );
+        }
+
         categoryRepository.deleteById(id);
     }
 
