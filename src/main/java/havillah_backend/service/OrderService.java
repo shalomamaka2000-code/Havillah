@@ -13,6 +13,8 @@ import havillah_backend.repository.OrderRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -72,7 +74,13 @@ public class OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Product not found with id: " + cartItem.getProduct().getId()));
 
-            // Re-check stock now that the row is locked; the cart check may be stale
+            // Re-check availability and stock after locking; cart data may be stale.
+            if (!Boolean.TRUE.equals(product.getActive())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Product '" + product.getName() + "' is no longer available"
+                );
+            }
             if (cartItem.getQuantity() > product.getStockQuantity()) {
                 throw new InsufficientStockException(
                         "Only " + product.getStockQuantity() + " unit(s) of '"
