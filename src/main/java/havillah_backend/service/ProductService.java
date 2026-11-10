@@ -73,7 +73,7 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getQuantity());
-        product.setImageUrl(request.getImageUrl());
+        applyImages(product, request);
         product.setCategory(category);
         product.setVendor(vendor);
 
@@ -212,7 +212,7 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getQuantity());
-        product.setImageUrl(request.getImageUrl());
+        applyImages(product, request);
         product.setCategory(category);
 
         // Only an admin may transfer a product to another vendor.
@@ -260,6 +260,45 @@ public class ProductService {
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
+
+    private void applyImages(Product product, ProductRequest request) {
+        List<String> requestedImages = request.getImageUrls();
+
+        if (requestedImages != null) {
+            List<String> images = requestedImages.stream()
+                    .map(String::trim)
+                    .toList();
+
+            product.setImageUrls(new ArrayList<>(images));
+            product.setImageUrl(images.isEmpty() ? null : images.get(0));
+            return;
+        }
+
+        // Support older clients that still send only imageUrl.
+        String legacyImageUrl = request.getImageUrl();
+        if (legacyImageUrl == null || legacyImageUrl.isBlank()) {
+            product.setImageUrl(null);
+            product.setImageUrls(new ArrayList<>());
+        } else {
+            String normalizedUrl = legacyImageUrl.trim();
+            product.setImageUrl(normalizedUrl);
+            product.setImageUrls(new ArrayList<>(List.of(normalizedUrl)));
+        }
+    }
+
+    private List<String> getProductImages(Product product) {
+        List<String> images = product.getImageUrls();
+
+        // Existing products may have only the legacy imageUrl column populated.
+        if (images == null || images.isEmpty()) {
+            return product.getImageUrl() == null || product.getImageUrl().isBlank()
+                    ? List.of()
+                    : List.of(product.getImageUrl());
+        }
+
+        return images;
+    }
+
     private ProductResponse mapToResponse(Product product) {
         return new ProductResponse(
                 product.getId(),
@@ -268,6 +307,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getStockQuantity(),
                 product.getImageUrl(),
+                getProductImages(product),
                 product.getActive(),
                 product.getCreatedAt(),
                 product.getCategory().getId(),
