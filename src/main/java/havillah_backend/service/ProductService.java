@@ -9,10 +9,12 @@ import havillah_backend.exception.ResourceNotFoundException;
 import havillah_backend.repository.CategoryRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.VendorRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -144,15 +147,43 @@ public class ProductService {
                 Sort.by(sortDirection, sortProperty)
         );
 
-        return productRepository.findProductsWithFilters(
-                normalizedName,
-                categoryId,
-                vendorId,
-                minPrice,
-                maxPrice,
-                inStock,
-                pageable
-        ).map(this::mapToResponse);
+        Specification<Product> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Add only filters that the client actually supplied.
+            // This avoids untyped NULL parameters in PostgreSQL.
+            predicates.add(criteriaBuilder.isTrue(root.get("active")));
+
+            if (normalizedName != null) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("name")),
+                        "%" + normalizedName.toLowerCase() + "%"
+                ));
+            }
+            if (categoryId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+            }
+            if (vendorId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("vendor").get("id"), vendorId));
+            }
+            if (minPrice != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+            }
+            if (maxPrice != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+            }
+            if (inStock != null) {
+                if (inStock) {
+                    predicates.add(criteriaBuilder.greaterThan(root.get("stockQuantity"), 0));
+                } else {
+                    predicates.add(criteriaBuilder.equal(root.get("stockQuantity"), 0));
+                }
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return productRepository.findAll(specification, pageable).map(this::mapToResponse);
     }
 
     public ProductResponse getProductById(Long id) {
