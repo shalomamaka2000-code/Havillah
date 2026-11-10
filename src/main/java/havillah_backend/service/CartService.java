@@ -14,6 +14,8 @@ import havillah_backend.repository.CartRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -112,6 +114,12 @@ public class CartService {
     }
 
     private void checkStock(Product product, int quantity) {
+        if (!Boolean.TRUE.equals(product.getActive())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Product '" + product.getName() + "' is currently unavailable"
+            );
+        }
         if (quantity > product.getStockQuantity()) {
             throw new InsufficientStockException(
                     "Only " + product.getStockQuantity() + " unit(s) of '"
