@@ -9,6 +9,10 @@ import havillah_backend.exception.ResourceNotFoundException;
 import havillah_backend.repository.CategoryRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.VendorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,10 +20,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductService {
+
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final Map<String, String> SORT_FIELDS = Map.of(
+            "name", "name",
+            "price", "price",
+            "newest", "createdAt",
+            "stock", "stockQuantity"
+    );
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -70,6 +84,75 @@ public class ProductService {
 
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll().stream().map(this::mapToResponse).toList();
+    }
+
+    public Page<ProductResponse> getProductsPage(
+            String name,
+            Long categoryId,
+            Long vendorId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Boolean inStock,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page number cannot be negative");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Page size must be between 1 and " + MAX_PAGE_SIZE
+            );
+        }
+        if (minPrice != null && minPrice.signum() < 0
+                || maxPrice != null && maxPrice.signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price filters cannot be negative");
+        }
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Minimum price cannot be greater than maximum price"
+            );
+        }
+
+        String sortProperty = SORT_FIELDS.get(sortBy == null ? "newest" : sortBy.toLowerCase());
+        if (sortProperty == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Unsupported sort field. Use name, price, newest, or stock"
+            );
+        }
+
+        Sort.Direction sortDirection;
+        try {
+            sortDirection = Sort.Direction.fromString(direction == null ? "desc" : direction);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Sort direction must be 'asc' or 'desc'"
+            );
+        }
+
+        String normalizedName = name == null || name.isBlank() ? null : name.trim();
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortProperty)
+        );
+
+        return productRepository.findProductsWithFilters(
+                normalizedName,
+                categoryId,
+                vendorId,
+                minPrice,
+                maxPrice,
+                inStock,
+                pageable
+        ).map(this::mapToResponse);
     }
 
     public ProductResponse getProductById(Long id) {
