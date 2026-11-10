@@ -2,10 +2,10 @@ package havillah_backend.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Getter;
 
 @Getter
-
 public class ProductResponse {
 
     private Long id;
@@ -14,6 +14,7 @@ public class ProductResponse {
     private BigDecimal price;
     private Integer quantity;
     private String imageUrl;
+    private List<String> imageUrls;
     private Boolean active;
     private LocalDateTime createdAt;
 
@@ -30,6 +31,7 @@ public class ProductResponse {
             BigDecimal price,
             Integer quantity,
             String imageUrl,
+            List<String> imageUrls,
             Boolean active,
             LocalDateTime createdAt,
             Long categoryId,
@@ -43,6 +45,7 @@ public class ProductResponse {
         this.price = price;
         this.quantity = quantity;
         this.imageUrl = imageUrl;
+        this.imageUrls = imageUrls == null ? List.of() : List.copyOf(imageUrls);
         this.active = active;
         this.createdAt = createdAt;
         this.categoryId = categoryId;
