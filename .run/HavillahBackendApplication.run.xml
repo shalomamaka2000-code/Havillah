@@ -2,7 +2,7 @@
   <configuration default="false" name="HavillahBackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
     <envs>
       <env name="ADMIN_EMAIL" value="admin@havillah.com" />
-      <env name="ADMIN_PASSWORD" value="NwwAd" />
+      <env name="ADMIN_PASSWORD" value="NwwAdmin123" />
       <env name="JWT_SECRET" value="Vfi3UO0psTtxxFpuv/k/yhtudEz1i68Qhols1HDs48U=min123" />
       <env name="JWT_EXPIRATION" value="7200000" />
     </envs>
