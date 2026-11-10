@@ -4,10 +4,12 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,7 +28,12 @@ public class ProductRequest {
     @Min(value = 0, message = "Quantity cannot be negative")
     private Integer quantity;
 
+    // Legacy single-image field; still supported for existing clients.
     private String imageUrl;
+
+    // Optional gallery. The first URL is also used as imageUrl.
+    @Size(max = 10, message = "A product can have at most 10 images")
+    private List<@NotBlank(message = "Image URLs cannot be blank") String> imageUrls;
 
     @NotNull(message = "Category ID is required")
     private Long categoryId;
