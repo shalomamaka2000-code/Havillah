@@ -123,7 +123,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ApiError> handleInsufficientStock(InsufficientStockException ex,
                                                             HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null);
+        return build(HttpStatus.CONFLICT, ex.getMessage(), req, null);
     }
 
     @ExceptionHandler(EmptyCartException.class)
