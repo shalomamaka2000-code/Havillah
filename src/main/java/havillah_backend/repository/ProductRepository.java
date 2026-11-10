@@ -12,12 +12,17 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-/*This line tells spring "find products with String-name regardless of the case"
-* now add the search to ProductService*/
+    /*
+     * Finds products whose names contain the supplied text,
+     * without case sensitivity.
+     */
     List<Product> findByNameContainingIgnoreCase(String name);
 
+    // Check whether a category is still referenced by any product.
+    boolean existsByCategory_Id(Long categoryId);
+
     // Locks the product row until the transaction ends, so two buyers
-// can't both take the last unit
+    // cannot both take the last unit.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
