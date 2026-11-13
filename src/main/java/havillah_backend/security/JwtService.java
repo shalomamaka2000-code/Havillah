@@ -1,4 +1,3 @@
-
 package havillah_backend.security;
 
 import io.jsonwebtoken.Claims;
@@ -13,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
 
-
 @Service
 public class JwtService {
 
@@ -27,9 +25,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date())
-                .expiration(new Date(
-                        System.currentTimeMillis() + expirationTime
-                ))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -47,10 +43,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(
-            String token,
-            Function<Claims, T> claimsResolver
-    ) {
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -67,13 +60,11 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails
-    ) {
+    public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
 
         return username.equals(userDetails.getUsername())
+                && userDetails.isEnabled()
                 && !isTokenExpired(token);
     }
 }
