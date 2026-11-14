@@ -3,8 +3,6 @@ package havillah_backend.controller;
 import havillah_backend.dto.CartItemResponse;
 import havillah_backend.dto.CartRequest;
 import havillah_backend.dto.CartResponse;
-import havillah_backend.security.CustomUserDetailsService;
-import havillah_backend.security.JwtService;
 import havillah_backend.service.CartService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +32,6 @@ class CartControllerTest {
 
     @MockitoBean
     private CartService cartService;
-
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
 
     private CartResponse sampleCart() {
         return new CartResponse(
