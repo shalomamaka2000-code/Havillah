@@ -2,7 +2,10 @@ package havillah_backend.controller;
 
 import havillah_backend.dto.CategoryRequest;
 import havillah_backend.dto.CategoryResponse;
+import havillah_backend.security.CustomUserDetailsService;
+import havillah_backend.security.JwtService;
 import havillah_backend.service.CategoryService;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -28,6 +31,12 @@ class CategoryControllerTest {
 
     @MockitoBean
     private CategoryService categoryService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private CategoryResponse sampleCategory() {
         return new CategoryResponse(1L, "Electronics", "Electronic devices and accessories");

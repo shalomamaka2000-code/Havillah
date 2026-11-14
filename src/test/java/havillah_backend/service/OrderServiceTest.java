@@ -1,3 +1,4 @@
+
 package havillah_backend.service;
 
 import havillah_backend.dto.OrderRequest;
@@ -10,12 +11,15 @@ import havillah_backend.repository.CartRepository;
 import havillah_backend.repository.OrderRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -69,11 +73,13 @@ class OrderServiceTest {
 
         when(userRepository.findByEmail("customer@example.com"))
                 .thenReturn(Optional.of(user));
-        when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
     }
 
     @Test
     void checkoutRejectsEmptyCart() {
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
         assertThrows(
                 EmptyCartException.class,
                 () -> orderService.checkout(
@@ -88,15 +94,21 @@ class OrderServiceTest {
 
     @Test
     void checkoutCreatesOrderDeductsStockAndClearsCart() {
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
         addProductToCart(2);
+
         when(productRepository.findByIdForUpdate(30L))
                 .thenReturn(Optional.of(product));
+
         when(orderRepository.save(any(Order.class)))
                 .thenAnswer(invocation -> {
                     Order saved = invocation.getArgument(0);
                     saved.setId(100L);
                     return saved;
                 });
+
         when(cartRepository.save(any(Cart.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -120,8 +132,12 @@ class OrderServiceTest {
 
     @Test
     void checkoutRejectsQuantityAboveAvailableStock() {
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
         product.setStockQuantity(1);
         addProductToCart(2);
+
         when(productRepository.findByIdForUpdate(30L))
                 .thenReturn(Optional.of(product));
 
@@ -141,8 +157,12 @@ class OrderServiceTest {
 
     @Test
     void checkoutRejectsInactiveProduct() {
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
         product.setActive(false);
         addProductToCart(1);
+
         when(productRepository.findByIdForUpdate(30L))
                 .thenReturn(Optional.of(product));
 
@@ -166,6 +186,7 @@ class OrderServiceTest {
 
         when(orderRepository.findByIdAndUser(100L, user))
                 .thenReturn(Optional.of(order));
+
         when(productRepository.findByIdForUpdate(30L))
                 .thenReturn(Optional.of(product));
 
@@ -188,11 +209,14 @@ class OrderServiceTest {
 
         assertThrows(
                 InvalidOrderStateException.class,
-                () -> orderService.cancelMyOrder("customer@example.com", 100L)
+                () -> orderService.cancelMyOrder(
+                        "customer@example.com",
+                        100L
+                )
         );
 
         assertEquals(8, product.getStockQuantity());
-        verify(productRepository, never()).findByIdForUpdate(anyLong());
+        verify(productRepository, never()).findByIdForUpdate(any());
     }
 
     private void addProductToCart(int quantity) {
@@ -201,6 +225,7 @@ class OrderServiceTest {
         item.setCart(cart);
         item.setProduct(product);
         item.setQuantity(quantity);
+
         cart.getItems().add(item);
     }
 
@@ -210,7 +235,9 @@ class OrderServiceTest {
         order.setUser(user);
         order.setStatus(status);
         order.setShippingAddress("12 Example Street");
-        order.setTotalAmount(product.getPrice().multiply(BigDecimal.valueOf(quantity)));
+        order.setTotalAmount(
+                product.getPrice().multiply(BigDecimal.valueOf(quantity))
+        );
 
         OrderItem item = new OrderItem();
         item.setOrder(order);
@@ -218,6 +245,7 @@ class OrderServiceTest {
         item.setProductName(product.getName());
         item.setUnitPrice(product.getPrice());
         item.setQuantity(quantity);
+
         order.getItems().add(item);
 
         return order;

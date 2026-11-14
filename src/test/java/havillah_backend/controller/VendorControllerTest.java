@@ -2,6 +2,8 @@ package havillah_backend.controller;
 
 import havillah_backend.dto.VendorRequest;
 import havillah_backend.dto.VendorResponse;
+import havillah_backend.security.CustomUserDetailsService;
+import havillah_backend.security.JwtService;
 import havillah_backend.service.VendorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,12 @@ class VendorControllerTest {
 
     @MockitoBean
     private VendorService vendorService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     private VendorResponse sampleVendor() {
         return new VendorResponse(
