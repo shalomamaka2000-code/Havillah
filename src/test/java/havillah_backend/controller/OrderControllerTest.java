@@ -83,7 +83,7 @@ class OrderControllerTest {
     @Test
     void checkoutReturnsBadRequestWhenShippingAddressIsBlank() throws Exception {
         mockMvc.perform(post("/api/orders")
-                        .principal(() -> "customer@example.com")
+                        .principal(new UsernamePasswordAuthenticationToken("customer@example.com", null, List.of()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,7 +100,7 @@ class OrderControllerTest {
         when(orderService.getMyOrders("customer@example.com")).thenReturn(List.of(sampleOrder()));
 
         mockMvc.perform(get("/api/orders")
-                        .principal(() -> "customer@example.com"))
+                        .principal(new UsernamePasswordAuthenticationToken("customer@example.com", null, List.of())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(10))
                 .andExpect(jsonPath("$[0].shippingAddress").value("12 Marina Road, Lagos"));
@@ -113,7 +113,7 @@ class OrderControllerTest {
         when(orderService.getMyOrder("customer@example.com", 10L)).thenReturn(sampleOrder());
 
         mockMvc.perform(get("/api/orders/10")
-                        .principal(() -> "customer@example.com"))
+                        .principal(new UsernamePasswordAuthenticationToken("customer@example.com", null, List.of())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.items[0].productName").value("Wireless Headphones"));
@@ -132,7 +132,7 @@ class OrderControllerTest {
         when(orderService.cancelMyOrder("customer@example.com", 10L)).thenReturn(cancelledOrder);
 
         mockMvc.perform(put("/api/orders/10/cancel")
-                        .principal(() -> "customer@example.com"))
+                        .principal(new UsernamePasswordAuthenticationToken("customer@example.com", null, List.of())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.status").value("CANCELLED"));
