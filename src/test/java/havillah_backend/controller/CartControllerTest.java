@@ -10,7 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CartController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@WithMockUser(username = "customer@example.com")
 class CartControllerTest {
 
     @Autowired
@@ -32,6 +31,12 @@ class CartControllerTest {
 
     @MockitoBean
     private CartService cartService;
+
+    private UsernamePasswordAuthenticationToken authenticatedPrincipal() {
+        return UsernamePasswordAuthenticationToken.authenticated(
+                "customer@example.com", null, List.of()
+        );
+    }
 
     private CartResponse sampleCart() {
         return new CartResponse(
@@ -51,7 +56,7 @@ class CartControllerTest {
     void getCartReturnsCurrentUsersCart() throws Exception {
         when(cartService.getCart("customer@example.com")).thenReturn(sampleCart());
 
-        mockMvc.perform(get("/api/cart"))
+        mockMvc.perform(get("/api/cart").principal(authenticatedPrincipal()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].itemId").value(10))
                 .andExpect(jsonPath("$.items[0].productName").value("Wireless Headphones"))
@@ -66,6 +71,7 @@ class CartControllerTest {
                 .thenReturn(sampleCart());
 
         mockMvc.perform(post("/api/cart/items")
+                        .principal(authenticatedPrincipal())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -104,6 +110,7 @@ class CartControllerTest {
         )).thenReturn(sampleCart());
 
         mockMvc.perform(put("/api/cart/items/10")
+                        .principal(authenticatedPrincipal())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -126,7 +133,7 @@ class CartControllerTest {
                 new CartResponse(List.of(), BigDecimal.ZERO)
         );
 
-        mockMvc.perform(delete("/api/cart/items/10"))
+        mockMvc.perform(delete("/api/cart/items/10").principal(authenticatedPrincipal()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty())
                 .andExpect(jsonPath("$.totalAmount").value(0));
@@ -138,7 +145,7 @@ class CartControllerTest {
     void clearCartReturnsNoContent() throws Exception {
         doNothing().when(cartService).clearCart("customer@example.com");
 
-        mockMvc.perform(delete("/api/cart"))
+        mockMvc.perform(delete("/api/cart").principal(authenticatedPrincipal()))
                 .andExpect(status().isNoContent());
 
         verify(cartService).clearCart("customer@example.com");
