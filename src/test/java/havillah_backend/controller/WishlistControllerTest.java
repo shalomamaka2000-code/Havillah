@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(WishlistController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 class WishlistControllerTest {
 
     @Autowired
@@ -83,6 +83,7 @@ class WishlistControllerTest {
         when(wishlistService.addProduct(7L, 5L)).thenReturn(sampleWishlistItem());
 
         mockMvc.perform(post("/api/wishlist/5")
+                        .with(csrf())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(20))
@@ -116,8 +117,15 @@ class WishlistControllerTest {
         doNothing().when(wishlistService).removeProduct(7L, 5L);
 
         mockMvc.perform(delete("/api/wishlist/5")
+                        .with(csrf())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
-                .andDo(print())
+                .andDo(result -> {
+                    Exception exception = result.getResolvedException();
+
+                    if (exception != null) {
+                        exception.printStackTrace();
+                    }
+                })
                 .andExpect(status().isNoContent());
 
         verify(wishlistService).removeProduct(7L, 5L);
@@ -130,6 +138,7 @@ class WishlistControllerTest {
         doNothing().when(wishlistService).clearWishlist(7L);
 
         mockMvc.perform(delete("/api/wishlist")
+                        .with(csrf())
                         .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
                 .andExpect(status().isNoContent());
 
