@@ -11,7 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+public interface ProductRepository extends JpaRepository<Product, Long>,
+        JpaSpecificationExecutor<Product> {
 
     /*
      * Finds products whose names contain the supplied text,
@@ -27,4 +28,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
+
+    //This method prevents products already deactivated from being discovered
+    List<Product> findByActiveTrue();
+
+    List<Product> findByNameContainingIgnoreCaseAndActiveTrue(String name);
+
+    Optional<Product> findByIdAndActiveTrue(Long id);
 }

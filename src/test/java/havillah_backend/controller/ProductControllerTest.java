@@ -5,6 +5,8 @@ import havillah_backend.dto.ProductResponse;
 import havillah_backend.security.CustomUserDetailsService;
 import havillah_backend.security.JwtService;
 import havillah_backend.service.ProductService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -73,6 +75,32 @@ class ProductControllerTest {
 
         verify(productService).getAllProducts();
     }
+
+
+    @Test
+    void getProductByIdReturnsNotFoundWhenProductDoesNotExist() throws Exception {
+        when(productService.getProductById(99L))
+                .thenThrow(new havillah_backend.exception.ResourceNotFoundException(
+                        "Product not found"
+                ));
+
+        mockMvc.perform(get("/api/products/99"))
+                .andExpect(status().isNotFound());
+
+        verify(productService).getProductById(99L);
+    }
+
+    @Test
+    void getAllProductsReturnsEmptyListWhenNoActiveProductsExist() throws Exception {
+        when(productService.getAllProducts()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        verify(productService).getAllProducts();
+    }
+
 
     @Test
     void getProductByIdReturnsProduct() throws Exception {

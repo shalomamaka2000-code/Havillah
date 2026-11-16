@@ -81,14 +81,18 @@ public class ProductService {
     }
 
     public List<ProductResponse> searchProducts(String name) {
-        return productRepository.findByNameContainingIgnoreCase(name)
-                .stream().map(this::mapToResponse).toList();
+        return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(name)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream().map(this::mapToResponse).toList();
+        return productRepository.findByActiveTrue()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
-
     public Page<ProductResponse> getProductsPage(
             String name,
             Long categoryId,
@@ -187,8 +191,9 @@ public class ProductService {
     }
 
     public ProductResponse getProductById(Long id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
         return mapToResponse(product);
     }
 

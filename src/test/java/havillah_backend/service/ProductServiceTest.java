@@ -5,6 +5,8 @@ import havillah_backend.dto.ProductResponse;
 import havillah_backend.entity.Category;
 import havillah_backend.entity.Product;
 import havillah_backend.entity.Vendor;
+import java.util.List;
+import havillah_backend.exception.ResourceNotFoundException;
 import havillah_backend.repository.CategoryRepository;
 import havillah_backend.repository.ProductRepository;
 import havillah_backend.repository.VendorRepository;
@@ -137,6 +139,80 @@ class ProductServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verify(productRepository, never()).save(any(Product.class));
+    }
+
+
+    @Test
+    void getAllProductsReturnsOnlyActiveProducts() {
+        Product activeProduct = createTestProduct(1L);
+        activeProduct.setId(1L);
+        activeProduct.setActive(true);
+
+        when(productRepository.findByActiveTrue())
+                .thenReturn(List.of(activeProduct));
+
+        List<ProductResponse> result = productService.getAllProducts();
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
+
+        verify(productRepository).findByActiveTrue();
+    }
+
+    @Test
+    void searchProductsReturnsOnlyActiveProducts() {
+        Product activeProduct = createTestProduct(1L);
+        activeProduct.setId(1L);
+        activeProduct.setActive(true);
+
+        when(productRepository.findByNameContainingIgnoreCaseAndActiveTrue("phone"))
+                .thenReturn(List.of(activeProduct));
+
+        List<ProductResponse> result = productService.searchProducts("phone");
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
+
+        verify(productRepository)
+                .findByNameContainingIgnoreCaseAndActiveTrue("phone");
+    }
+
+    @Test
+    void getProductByIdThrowsExceptionWhenProductIsInactiveOrNotFound() {
+        when(productRepository.findByIdAndActiveTrue(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> productService.getProductById(99L)
+        );
+
+        verify(productRepository).findByIdAndActiveTrue(99L);
+    }
+
+    private Product createTestProduct(Long id) {
+        Category category = new Category("Electronics", "Electronic devices");
+        category.setId(1L);
+
+        Vendor vendor = new Vendor(
+                "Test Vendor",
+                "vendor@example.com",
+                "08000000001",
+                "Lagos"
+        );
+        vendor.setId(10L);
+
+        Product product = new Product();
+        product.setId(id);
+        product.setName("Test smartphone");
+        product.setDescription("Test product");
+        product.setPrice(new BigDecimal("150000.00"));
+        product.setStockQuantity(5);
+        product.setActive(true);
+        product.setCategory(category);
+        product.setVendor(vendor);
+
+        return product;
     }
 
     private ProductRequest validProductRequest() {
