@@ -68,8 +68,10 @@ public class DataInitializer implements CommandLineRunner {
         admin.setLastName("Administrator");
         admin.setEmail(adminEmail);
         admin.setPassword(passwordEncoder.encode(adminPassword));
+        admin.setPhone("0000000000");
         admin.setEnabled(true);
         admin.setRole(adminRole);
+
 
         userRepository.save(admin);
     }

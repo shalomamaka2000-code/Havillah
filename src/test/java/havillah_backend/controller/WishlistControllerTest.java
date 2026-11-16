@@ -12,6 +12,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(WishlistController.class)
@@ -81,7 +83,7 @@ class WishlistControllerTest {
         when(wishlistService.addProduct(7L, 5L)).thenReturn(sampleWishlistItem());
 
         mockMvc.perform(post("/api/wishlist/5")
-                        .principal(customerAuthentication()))
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(20))
                 .andExpect(jsonPath("$.productId").value(5))
@@ -99,7 +101,7 @@ class WishlistControllerTest {
                 .thenReturn(List.of(sampleWishlistItem()));
 
         mockMvc.perform(get("/api/wishlist")
-                        .principal(customerAuthentication()))
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].productId").value(5))
                 .andExpect(jsonPath("$[0].productName").value("Wireless Headphones"));
@@ -114,7 +116,8 @@ class WishlistControllerTest {
         doNothing().when(wishlistService).removeProduct(7L, 5L);
 
         mockMvc.perform(delete("/api/wishlist/5")
-                        .principal(customerAuthentication()))
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
+                .andDo(print())
                 .andExpect(status().isNoContent());
 
         verify(wishlistService).removeProduct(7L, 5L);
@@ -127,7 +130,7 @@ class WishlistControllerTest {
         doNothing().when(wishlistService).clearWishlist(7L);
 
         mockMvc.perform(delete("/api/wishlist")
-                        .principal(customerAuthentication()))
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(customerAuthentication())))
                 .andExpect(status().isNoContent());
 
         verify(wishlistService).clearWishlist(7L);
